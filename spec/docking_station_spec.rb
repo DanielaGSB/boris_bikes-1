@@ -1,38 +1,60 @@
 require 'DockingStation'
+require 'Bike'
 
 describe DockingStation do
-
-    it 'Allows user to set capacity instance variable' do
-      docking_station = DockingStation.new
-      expect (subject.instance_variable_set(:@capacity, capacity))
-    end
 
     describe '#release_bike' do
           it { is_expected.to respond_to :release_bike }
 
+          #let(:bike) {double :bike}
           it 'gets a bike and expects to be working' do
-            bike = Bike.new
-            subject.dock(bike)
-            expect(bike).to be_working
+            bike = double(:bike, broken?: false, working?: true)
+            #allow(bike).to receive(:working?).and_return(true)
+            subject.dock bike
+            expect(subject.release_bike).to eq bike
           end
 
-          it 'raises exception when no bikes' do
+          it 'does not release broken bikes' do
+            bike = double(:bike, broken?: true)
+            subject.dock bike
             expect {subject.release_bike}.to raise_error
           end
+
+      end
+
+    describe '#empty?' do
+        it 'raises exception when no bikes' do
+          expect {subject.release_bike}.to raise_error
+        end
     end
 
     describe '#dock' do
+
+      #let(:bike) {double :bike}
         it 'allows a bike to be docked' do
-          bike = Bike.new
+          bike = double(:bike, dock: true, broken?: false, working?: true)
           subject.dock(bike)
-          expect(subject.docked).to eq [bike]
+          expect(subject.release_bike).to eq bike
         end
 
-        it 'raises an error if the dock is full' do
-          DockingStation::DEFAULT_CAPACITY.times { subject.dock Bike.new }
-          expect {subject.dock Bike.new}.to raise_error
+      end
 
+    describe '#full?' do
+        it 'raises an error if the dock is full' do
+          subject.capacity.times {subject.dock double :bike }
+          expect {subject.dock(:bike)}.to raise_error 'Dock is already full'
         end
     end
 
+
+      it 'allows capacity to be set' do
+        docking_station = DockingStation.new(50)
+        expect(docking_station.capacity).to eq 50
+      end
+
+
+      it 'it sets a default cacpacity' do
+        expect(subject.capacity).to eq DockingStation::DEFAULT_CAPACITY
+
+      end
 end
